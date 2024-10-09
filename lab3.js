@@ -1,49 +1,31 @@
-const { program } = require('commander');
 const fs = require('fs');
-
+const { program } = require('commander');
 
 program
-    .requiredOption('-i, --input <path>', 'path to the input JSON file')
-    .option('-o, --output <path>', 'path to the output file')
-    .option('-d, --display', 'output the result to console');
+    .requiredOption('-i, --input <type>', 'Path to input JSON file')
+    .option('-o, --output <type>', 'Path to output file')
+    .option('-d, --display', 'Display output in console');
 
 program.parse(process.argv);
 
-
 const options = program.opts();
-const inputFilePath = options.input;
-const outputFilePath = options.output;
-const display = options.display;
 
-if (!inputFilePath) {
-    console.error('Please, specify input file.');
+if (!fs.existsSync(options.input)) {
+    console.error('Cannot find input file');
     process.exit(1);
 }
 
-
-if (!fs.existsSync(inputFilePath)) {
-    console.error('Cannot find input file.');
-    process.exit(1);
-}
-
-
-let data;
 try {
-    data = fs.readFileSync(inputFilePath, 'utf-8');
-} catch (error) {
-    console.error('Error reading input file:', error.message);
-    process.exit(1);
-}
+    const inputData = JSON.parse(fs.readFileSync(options.input, 'utf8'));
+    const result = inputData; // Обробіть дані тут
 
-
-if (display) {
-    console.log(data);
-}
-
-
-if (outputFilePath) {
-    fs.writeFileSync(outputFilePath, data);
-    if (display) {
-        console.log('Data written to', outputFilePath);
+    if (options.display) {
+        console.log(result);
     }
+
+    if (options.output) {
+        fs.writeFileSync(options.output, JSON.stringify(result, null, 2), 'utf8');
+    }
+} catch (error) {
+    console.error('Error reading the input file:', error.message);
 }
