@@ -1,31 +1,56 @@
 const fs = require('fs');
 const { program } = require('commander');
 
+// Налаштування командного рядка
 program
-    .requiredOption('-i, --input <type>', 'Path to input JSON file')
-    .option('-o, --output <type>', 'Path to output file')
-    .option('-d, --display', 'Display output in console');
+    .option('-i, --input <path>', 'шлях до файлу для читання (обовʼязковий параметр)')
+    .option('-o, --output <path>', 'шлях до файлу для запису (необовʼязковий параметр)')
+    .option('-d, --display', 'вивести результат у консоль (необовʼязковий параметр)')
+    .parse(process.argv);
 
-program.parse(process.argv);
-
+// Отримуємо значення параметрів
 const options = program.opts();
 
-if (!fs.existsSync(options.input)) {
-    console.error('Cannot find input file');
+// Перевірка наявності обовʼязкового параметра
+if (!options.input) {
+    console.error("Please, specify input file");
     process.exit(1);
 }
 
+// Перевірка наявності файлу для читання
+if (!fs.existsSync(options.input)) {
+    console.error("Cannot find input file");
+    process.exit(1);
+}
+
+// 
+const jsonData = fs.readFileSync(options.input, 'utf8');
+
+let data;
 try {
-    const inputData = JSON.parse(fs.readFileSync(options.input, 'utf8'));
-    const result = inputData; // Обробіть дані тут
-
-    if (options.display) {
-        console.log(result);
-    }
-
-    if (options.output) {
-        fs.writeFileSync(options.output, JSON.stringify(result, null, 2), 'utf8');
-    }
+    data = JSON.parse(jsonData);
 } catch (error) {
-    console.error('Error reading the input file:', error.message);
+    console.error("Error parsing JSON data:", error.message);
+    process.exit(1);
+}
+
+// 
+const filteredData = data.filter(item => item.ku === "13" && item.value > 2);
+
+// 
+const result = filteredData.map(item => item.value);
+
+// 
+if (options.display) {
+    if (result.length === 0) {
+        console.log("Нічого не знайдено відповідно до критеріїв.");
+    } else {
+        console.log(result.join('\n'));
+    }
+}
+
+// 
+if (options.output) {
+    fs.writeFileSync(options.output, result.join('\n'), 'utf8');
+    console.log(`Результати збережено у файл: ${options.output}`);
 }
